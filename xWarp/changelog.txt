@@ -1,6 +1,9 @@
 Changelog for xWarp by CubieX
 -----------------------------
 
+V.3.1.7b
+- added handling for warping a player and his horse if he is sitting on one
+
 V.3.1.7a
 - First inofficial CubieX version
 - changed project to non-maven and added load mechanism for external libraries without using maven or manifest file

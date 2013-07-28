@@ -40,6 +40,9 @@ public class XWarp extends JavaPlugin {
    public String name;
    public String version;
    private boolean enableCanceled = true;
+   
+   //=========================
+   public static final boolean DEBUG = false; // enable this for debug output
 
    public XWarp() {
       super();
