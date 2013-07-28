@@ -1,0 +1,41 @@
+== DONE ==
+
+3.0.1
+  - command to set cooldown/warmup of warps
+
+3.0.2
+  - fix search command
+
+3.1.0
+  - dynmap marker support
+  - Set the default message in the settings
+  - default selected columns
+  - Move warps/wpas into other world
+  - list options could be added/removed
+
+3.1.5
+  - Permission to show own unlisted warps.
+  - Check permission "change owner" if create warp with other owner (done)
+  - All world permissions are now by default true.
+  - Info command shows if the warp is (not) listed.
+
+== TO BE DONE ==
+
+3.2.0
+  - wpa list command
+  - Export hmod compatible warps
+  - auto completion
+  - pay only difference for change visibility (maybe 3.1.0)
+  - default warping price for a warp
+  - Permissions pools (like xwarp.warp.edit.default) with BPU 1.3.0
+
+3.3.0
+  - regex parameter for warp list
+  - warp list like options for warp search
+  - command to remove all warps matching specific options (options like in /w ls)
+  - info in the list to show if a warp is save
+
+Undetermined
+  - separated permission for warp.create.private.set/warp.create.private.change
+  - (Un)Register editor permissions (xwarp.<type>.edit.object.*) (Actually not needed, as it's default is false)
+  - Fall through test

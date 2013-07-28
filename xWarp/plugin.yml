@@ -1,0 +1,25 @@
+name: xWarp
+version: 3.1.7a
+main: de.xzise.xwarp.XWarp
+description: Implementation to create warp points!
+order: postworld
+authors:
+  - 'xZise'
+  - 'tkelly'
+  - 'CubieX'
+commands:
+  xwarp:
+    description: xWarp managing commands
+    usage: /<command> help - Displays the help for all xwarp commands.
+    aliases: [xman]
+  warp:
+    description: Warp commands
+    usage: /<command> help - Displays the help for all warp commands.
+    aliases: [xw, w]
+  wpa:
+    description: Warp protection area handling commands.
+    usage: /<command> help - Displays the help for all wpa commands.
+    aliases: [xwpa]
+  go:
+    description: Warps you to the saved location.
+    usage: /<command> [to] <warpname> [owner] [warped player]
