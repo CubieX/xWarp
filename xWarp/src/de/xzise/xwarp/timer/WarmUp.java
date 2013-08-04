@@ -72,8 +72,9 @@ public class WarmUp {
 
    private void sendPlayer(CommandSender warper, Warpable warped, Warp warp)
    {
-      boolean playerIsOnMount = false;
+      boolean playerIsOnTamedSaddledMount = false;
       Player player = null;
+      Horse mount = null;
 
       if(warped instanceof WarpablePlayer)
       {
@@ -82,15 +83,25 @@ public class WarmUp {
          if(null != player &&
                player.isOnline() &&
                player.isInsideVehicle() &&
-               player.getVehicle().getType() == EntityType.HORSE) // player sits on a mount (like a horse)
+               (player.getVehicle().getType() == EntityType.HORSE)) // player sits on a mount (like a horse)
          {
-            playerIsOnMount = true;
+            mount = (Horse) player.getVehicle();
+            
+            if(mount.isTamed() &&
+                  (null != mount.getInventory().getSaddle())) // player may only warp with a tamed mount with a saddle
+            {
+               playerIsOnTamedSaddledMount = true;               
+            }
+            else
+            {
+               player.sendMessage("You can only warp on a mount that is tamed and saddled!");
+            }
          }
       }
 
-      if(playerIsOnMount) // handle warping of mounted player with his mount
+      if(playerIsOnTamedSaddledMount) // handle warping of mounted player with his mount
       {
-         Horse mount = (Horse) player.getVehicle();         
+                  
          // unmount player
          boolean resUnmount = player.leaveVehicle();
          // teleport horse and re-mount player (teleporting him in the proccess)           

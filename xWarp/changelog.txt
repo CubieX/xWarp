@@ -1,6 +1,9 @@
 Changelog for xWarp by CubieX
 -----------------------------
 
+V.3.1.7c
+- warping while sitting on a mount is only allowed if the mount is tamed and equipped with a saddle
+
 V.3.1.7b
 - added handling for warping a player and his horse if he is sitting on one
 
