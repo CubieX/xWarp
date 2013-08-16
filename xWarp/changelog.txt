@@ -1,6 +1,13 @@
 Changelog for xWarp by CubieX
 -----------------------------
 
+V.3.1.7d
+- added warping together with mobs that are leashed to the player
+  (only if player is not sitting on a mount)
+- added version number output to status command
+- prepared WorldGuard integration for protecting mobs from being stolen by leashed warping
+  (not yet enabled in implementation)
+
 V.3.1.7c
 - warping while sitting on a mount is only allowed if the mount is tamed and equipped with a saddle
 

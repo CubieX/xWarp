@@ -1,5 +1,6 @@
 package de.xzise.xwarp.commands.xwarp;
 
+import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
 
 import de.xzise.commands.CommonHelpableSubCommand;
@@ -29,6 +30,7 @@ public class StatusCommand extends CommonHelpableSubCommand {
     public boolean execute(CommandSender sender, String[] parameters) {
         if (parameters.length == 1) {
             sender.sendMessage("xWarp status:");
+            sender.sendMessage("xWarp version: " + Bukkit.getPluginManager().getPlugin("xWarp").getDescription().getVersion());
             sender.sendMessage("Number of warps: " + managerSize(this.warpManager));
             sender.sendMessage("Number of warp protection areas: " + managerSize(this.wpaManager));
             sender.sendMessage("Economy: " + this.economy.getWrapperName());

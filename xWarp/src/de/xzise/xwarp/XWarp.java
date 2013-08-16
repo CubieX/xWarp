@@ -3,12 +3,10 @@ package de.xzise.xwarp;
 import java.io.File;
 import java.io.IOException;
 import java.net.MalformedURLException;
-
 import org.bukkit.World;
 import org.bukkit.event.Listener;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.java.JavaPlugin;
-
 import de.xzise.MinecraftUtil;
 import de.xzise.XLogger;
 import de.xzise.wrappers.permissions.PermissionsHandler;
@@ -36,12 +34,14 @@ public class XWarp extends JavaPlugin {
    private PermissionsHandler permissionHandler = permissions;
 
    private DataConnection dataConnection;
+   //private WorldGuardPlugin wgInst = null; // WorldGuard currently not in use (used to protect mobs from being stolen by leashed teleport)
 
    public String name;
    public String version;
    private boolean enableCanceled = true;
-   
+
    //=========================
+   static final String logPrefix = "[xWarp] "; // Prefix to go in front of all log entries
    public static final boolean DEBUG = false; // enable this for debug output
 
    public XWarp() {
@@ -193,6 +193,12 @@ public class XWarp extends JavaPlugin {
 
       serverListener.register(this);
       registerEvents(this, worldListener, playerListener, blockListener, new XWEntityListener(properties, warpManager.getWarmUp()));
+
+      /*if(!getWorldGuard())
+      {
+         XWarp.logger.info(logPrefix + "No WorldGuard found. Warping mobs away from protected areas will be possible!.");
+      }*/
+
       XWarp.logger.enableMsg();
    }
 
@@ -208,4 +214,20 @@ public class XWarp extends JavaPlugin {
       file.renameTo(new File(this.getDataFolder(), "warps.db"));
       folder.delete();
    }
+
+   /*private boolean getWorldGuard()
+   {
+      boolean ok = false;
+
+      Plugin wgPlugin = getServer().getPluginManager().getPlugin("WorldGuard");
+
+      // WorldGuard may not be loaded
+      if ((null != wgPlugin) && (wgPlugin instanceof WorldGuardPlugin))
+      {        
+         this.wgInst = (WorldGuardPlugin) wgPlugin;
+         ok = true;
+      }
+
+      return ok;
+   }*/
 }

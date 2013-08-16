@@ -1,13 +1,16 @@
 package de.xzise.xwarp.timer;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.command.CommandSender;
+import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Horse;
+import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.player.PlayerTeleportEvent.TeleportCause;
 import org.bukkit.plugin.Plugin;
@@ -20,20 +23,25 @@ import de.xzise.xwarp.warpable.Warpable;
 import de.xzise.xwarp.warpable.WarpablePlayer;
 import de.xzise.xwarp.wrappers.permission.Groups;
 
-public class WarmUp {
-
+public class WarmUp
+{
    private Map<CommandSender, Integer> players = new HashMap<CommandSender, Integer>();
    private final Plugin plugin;
    private final PluginProperties properties;
    private final CoolDown down;
 
-   public WarmUp(Plugin plugin, PluginProperties properties, CoolDown down) {
+   private final int MAX_LEASH_DISTANCE = 12; // real max distance are 10 blocks, but to be sure...
+   private ArrayList<Integer> leashedMobs = new ArrayList<Integer>();
+
+   public WarmUp(Plugin plugin, PluginProperties properties, CoolDown down)
+   {
       this.plugin = plugin;
       this.properties = properties;
       this.down = down;
    }
 
-   public void addPlayer(CommandSender warper, Warpable warped, Warp warp) {
+   public void addPlayer(CommandSender warper, Warpable warped, Warp warp)
+   {
       int warmup = getWarmupTime(warp, warper);
       if (warmup > 0) {
          if (this.properties.isWarmupNotify()) {
@@ -46,7 +54,8 @@ public class WarmUp {
       }
    }
 
-   public boolean cancelWarmUp(CommandSender warper) {
+   public boolean cancelWarmUp(CommandSender warper)
+   {
       // TODO: Only remove, if warp itself?
       if (this.players.containsKey(warper)) {
          this.plugin.getServer().getScheduler().cancelTask(this.players.get(warper));
@@ -86,7 +95,7 @@ public class WarmUp {
                (player.getVehicle().getType() == EntityType.HORSE)) // player sits on a mount (like a horse)
          {
             mount = (Horse) player.getVehicle();
-            
+
             if(mount.isTamed() &&
                   (null != mount.getInventory().getSaddle())) // player may only warp with a tamed mount with a saddle
             {
@@ -94,44 +103,151 @@ public class WarmUp {
             }
             else
             {
-               player.sendMessage("You can only warp on a mount that is tamed and saddled!");
+               player.sendMessage("Du kannst nur auf einem gezaehmten und besatteltem Reittier warpen!");
             }
          }
       }
 
-      if(playerIsOnTamedSaddledMount) // handle warping of mounted player with his mount
+      if((null != player) &&
+            playerIsOnTamedSaddledMount) // handle warping of mounted player with his mount
       {
-                  
-         // unmount player
-         boolean resUnmount = player.leaveVehicle();
-         // teleport horse and re-mount player (teleporting him in the proccess)           
-         boolean resTele = mount.teleport(warp.getLocation().toLocation());
-         boolean resSetPassenger = mount.setPassenger(player); // will teleport the player to the horses back
-
-         if(resUnmount && resTele && resSetPassenger)
+         if(leashedMobsPresent(player))
          {
-            sendWelcomeMessage(warper, warped, warp);
-            if(XWarp.DEBUG){warper.sendMessage("DEBUG: Warped mounted player and his mount.");}
+            // block warping because it's not allowed when sitting on a horse while holding leashed mobs
+            player.sendMessage(ChatColor.GOLD + "Du kannst nicht zusammen mit angeleinten Tieren warpen,\nwenn du auf einem Pferd sitzt!");
          }
          else
          {
-            warper.sendMessage(ChatColor.RED + "Unable to warp.");
-            if(XWarp.DEBUG){warper.sendMessage("DEBUG: Unable to warp mounted player and his mount.");}
+            // unmount player
+            boolean resUnmount = player.leaveVehicle();
+            // teleport horse and re-mount player (teleporting him in the proccess)           
+            boolean resTele = mount.teleport(warp.getLocation().toLocation());
+            boolean resSetPassenger = mount.setPassenger(player); // will teleport the player to the horses back
+
+            if(resUnmount && resTele && resSetPassenger)
+            {
+               sendWelcomeMessage(warper, warped, warp);
+               if(XWarp.DEBUG){warper.sendMessage("DEBUG: Warped mounted player and his mount.");}
+            }
+            else
+            {
+               warper.sendMessage(ChatColor.RED + "Unable to warp.");
+               if(XWarp.DEBUG){warper.sendMessage("DEBUG: Unable to warp mounted player and his mount.");}
+            }
          }
       }
-      else // handle player warp only
+      else // handle player warp only (and leashed mobs, if present)
       {
-         if (warped.teleport(warp.getLocation().toLocation(), TeleportCause.COMMAND))
+         if(null != player)
          {
-            sendWelcomeMessage(warper, warped, warp);
-         }
-         else
-         {
-            warper.sendMessage(ChatColor.RED + "Unable to warp.");
+            LivingEntity livEnt = null;
+            leashedMobs.clear();
+
+            // check if there are leashed mobs present around the player
+            for(Entity ent : player.getNearbyEntities(2*MAX_LEASH_DISTANCE, 2*MAX_LEASH_DISTANCE, 2*MAX_LEASH_DISTANCE))
+            {
+               if(ent instanceof LivingEntity)
+               {
+                  livEnt = (LivingEntity)ent;                           
+
+                  if(livEnt.isLeashed())
+                  {                              
+                     if(livEnt.getLeashHolder().equals(player)) // issuing player has this mob leashed
+                     {                                 
+                        leashedMobs.add(livEnt.getEntityId());  
+                     }
+                  }
+               }
+            }
+
+            if(!leashedMobs.isEmpty())
+            { // there are leashed mobs present
+               boolean allowTeleport = true;
+
+               /*if(null != wgInst) // check all leashed mobs with WorldGuard if they may be teleported by this player
+               {
+                  for(Entity wEnt : player.getWorld().getEntities())
+                  {
+                     if(leashedMobs.contains(wEnt.getEntityId()))
+                     {
+                        if(!wgInst.canBuild(player, wEnt.getLocation())) // only mobs within areas where the issuing player can build may be teleported 
+                        {
+                           allowTeleport = false;
+                           break; // teleport all or nothing!
+                        }
+                     }
+                  }
+               }*/
+
+               if(player.isOp() ||
+                     player.hasPermission("xwarp.warp.admin.to.all") ||
+                     allowTeleport)
+               {
+                  if (warped.teleport(warp.getLocation().toLocation(), TeleportCause.COMMAND))
+                  {
+                     // if player was warped successfully, warp all leashed mobs after him
+                     for(Entity wEnt : player.getWorld().getEntities())
+                     {
+                        if(leashedMobs.contains(wEnt.getEntityId()))
+                        {
+                           wEnt.teleport(warp.getLocation().toLocation());
+                        }
+                     }
+
+                     sendWelcomeMessage(warper, warped, warp);
+                     if(XWarp.DEBUG){player.sendMessage(ChatColor.AQUA + "Du wurdest zusammen mit " + ChatColor.WHITE + leashedMobs.size() + ChatColor.AQUA + " Tieren gewarped!");}
+                  }
+                  else
+                  {
+                     warper.sendMessage(ChatColor.RED + "Unable to warp.");
+                  }
+               }
+               else
+               {
+                  player.sendMessage(ChatColor.GOLD + "Du kannst keine Tiere aus geschuetzten Bereichen herauswarpen!");
+               }
+            }
+            else
+            { // no leashed mobs so warp player only
+               if (warped.teleport(warp.getLocation().toLocation(), TeleportCause.COMMAND))
+               {
+                  sendWelcomeMessage(warper, warped, warp);
+               }
+               else
+               {
+                  warper.sendMessage(ChatColor.RED + "Unable to warp.");
+               }
+            }
          }
       }
    }
-   
+
+   private boolean leashedMobsPresent(Player player)
+   {
+      // check if there are leashed mobs present around the player (means: he holds a leash with mob attached)
+      boolean res = false;
+      LivingEntity livEnt = null;
+
+      for(Entity ent : player.getNearbyEntities(2*MAX_LEASH_DISTANCE, 2*MAX_LEASH_DISTANCE, 2*MAX_LEASH_DISTANCE))
+      {
+         if(ent instanceof LivingEntity)
+         {
+            livEnt = (LivingEntity)ent;                           
+
+            if(livEnt.isLeashed())
+            {
+               if(livEnt.getLeashHolder().equals(player)) // issuing player has at least one mob leashed
+               {                                 
+                  res = true;
+                  break;
+               }
+            }
+         }
+      }
+
+      return res;
+   }
+
    private void sendWelcomeMessage(CommandSender warper, Warpable warped, Warp warp)
    {
       String rawMsg = warp.getRawWelcomeMessage();
