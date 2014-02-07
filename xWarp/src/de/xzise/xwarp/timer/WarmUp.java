@@ -6,6 +6,7 @@ import java.util.Map;
 
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
+import org.bukkit.World;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
@@ -103,7 +104,7 @@ public class WarmUp
             }
             else
             {
-               player.sendMessage("Du kannst nur auf einem gezaehmten und besatteltem Reittier warpen!");
+               player.sendMessage(ChatColor.GOLD + "Du kannst nur auf einem gezaehmten und besatteltem Reittier warpen!");
             }
          }
       }
@@ -118,21 +119,30 @@ public class WarmUp
          }
          else
          {
-            // unmount player
-            boolean resUnmount = player.leaveVehicle();
-            // teleport horse and re-mount player (teleporting him in the proccess)           
-            boolean resTele = mount.teleport(warp.getLocation().toLocation());
-            boolean resSetPassenger = mount.setPassenger(player); // will teleport the player to the horses back
-
-            if(resUnmount && resTele && resSetPassenger)
+            if(!(player.getLocation().getWorld() != warp.getLocation().toLocation().getWorld()))
             {
-               sendWelcomeMessage(warper, warped, warp);
-               if(XWarp.DEBUG){warper.sendMessage("DEBUG: Warped mounted player and his mount.");}
+               // unmount player
+               boolean resUnmount = player.leaveVehicle();
+               // teleport horse and re-mount player (teleporting him in the proccess)           
+               boolean resTele = mount.teleport(warp.getLocation().toLocation());
+               boolean resSetPassenger = mount.setPassenger(player); // will teleport the player to the horses back
+
+               if(resUnmount && resTele && resSetPassenger)
+               {
+                  sendWelcomeMessage(warper, warped, warp);
+                  if(XWarp.DEBUG){warper.sendMessage("DEBUG: Warped mounted player and his mount.");}
+               }
+               else
+               {
+                  warper.sendMessage(ChatColor.RED + "Unable to warp.");
+                  if(XWarp.DEBUG){warper.sendMessage("DEBUG: Unable to warp mounted player and his mount.");}
+               }
             }
             else
             {
-               warper.sendMessage(ChatColor.RED + "Unable to warp.");
-               if(XWarp.DEBUG){warper.sendMessage("DEBUG: Unable to warp mounted player and his mount.");}
+               // warping to another world is problematic in Bukkit
+               // Workaround: Spawn a clone of the mount in the new world and destroy the original one               
+               player.sendMessage(ChatColor.GOLD + "Du kannst nicht mit einem Pferd in andere Welten warpen!");
             }
          }
       }
@@ -183,23 +193,32 @@ public class WarmUp
                      player.hasPermission("xwarp.warp.admin.to.all") ||
                      allowTeleport)
                {
-                  if (warped.teleport(warp.getLocation().toLocation(), TeleportCause.COMMAND))
+                  if(!(player.getLocation().getWorld() != warp.getLocation().toLocation().getWorld()))
                   {
-                     // if player was warped successfully, warp all leashed mobs after him
-                     for(Entity wEnt : player.getWorld().getEntities())
+                     if (warped.teleport(warp.getLocation().toLocation(), TeleportCause.COMMAND))
                      {
-                        if(leashedMobs.contains(wEnt.getEntityId()))
+                        // if player was warped successfully, warp all leashed mobs after him
+                        for(Entity wEnt : player.getWorld().getEntities())
                         {
-                           wEnt.teleport(warp.getLocation().toLocation());
+                           if(leashedMobs.contains(wEnt.getEntityId()))
+                           {
+                              wEnt.teleport(warp.getLocation().toLocation());
+                           }
                         }
-                     }
 
-                     sendWelcomeMessage(warper, warped, warp);
-                     if(XWarp.DEBUG){player.sendMessage(ChatColor.AQUA + "Du wurdest zusammen mit " + ChatColor.WHITE + leashedMobs.size() + ChatColor.AQUA + " Tieren gewarped!");}
+                        sendWelcomeMessage(warper, warped, warp);
+                        if(XWarp.DEBUG){player.sendMessage(ChatColor.AQUA + "Du wurdest zusammen mit " + ChatColor.WHITE + leashedMobs.size() + ChatColor.AQUA + " Tieren gewarped!");}
+                     }
+                     else
+                     {
+                        warper.sendMessage(ChatColor.RED + "Unable to warp.");
+                     }
                   }
                   else
                   {
-                     warper.sendMessage(ChatColor.RED + "Unable to warp.");
+                     // warping mobs to another world is problematic in Bukkit
+                     // Workaround: Spawn a clone of the mount in the new world and destroy the original one                     
+                     player.sendMessage(ChatColor.GOLD + "Du kannst nicht mit angeleinten Tieren in andere Welten warpen!");
                   }
                }
                else

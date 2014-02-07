@@ -217,7 +217,7 @@ public class Warp extends DefaultWarpObject<WarpPermissions> {
       // @formatter:off
       return checkMaterials(materials,
             // "Solids" blocks
-            Material.AIR, Material.WATER, Material.STATIONARY_WATER, Material.SNOW,
+            Material.AIR, Material.WATER, Material.STATIONARY_WATER, Material.SNOW, Material.CARPET,
             // Plants
             Material.SAPLING, Material.YELLOW_FLOWER, Material.RED_ROSE, Material.BROWN_MUSHROOM, Material.RED_MUSHROOM, Material.SUGAR_CANE_BLOCK, Material.CROPS, Material.LONG_GRASS, Material.DEAD_BUSH,
             // Torches/Redstone

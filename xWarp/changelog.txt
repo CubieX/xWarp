@@ -1,6 +1,11 @@
 Changelog for xWarp by CubieX
 -----------------------------
 
+V.3.1.7e
+- prevent warping with mount or leashed mobs to other world due to problems with bukkit
+- added carpet to opaque blocks to fix isSave check for warping
+- build against CB 1.7.2-R0.2 Beta
+
 V.3.1.7d
 - added warping together with mobs that are leashed to the player
   (only if player is not sitting on a mount)
